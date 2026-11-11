@@ -332,12 +332,13 @@ jobs:
       # every shard's diagnostics and coverage. Passing PRs run the full suite.
       fail-fast: ${{ github.event_name == 'pull_request' && needs.changes.outputs.tier == 'fast' }}
       matrix:
-        # Fast feedback uses one source group and the built groups below so the
-        # slowest built shard job stays inside the execution budget.
+        # Fast feedback uses one source group and eight built groups so the
+        # slowest built shard job stays inside a ten-minute execution budget.
         # Classification, build, and report merge sit outside that job.
         # Full qualification retains six complete shards with coverage.
-        # fork 变更：fast 档 8 → 10 分片，压最长分片的墙钟时间（ubuntu 并行不缩测试项）。
-        shard: ${{ fromJSON(needs.changes.outputs.tier == 'fast' && '["1/10","2/10","3/10","4/10","5/10","6/10","7/10","8/10","9/10","10/10"]' || '["1/6","2/6","3/6","4/6","5/6","6/6"]') }}
+        # fork 注：保持上游 8/6 分片——ciRequiredLanes 契约测试锁定 CI 结构，
+        # 实测 10 分片仅省 ~13% 墙钟，不值得破契约。
+        shard: ${{ fromJSON(needs.changes.outputs.tier == 'fast' && '["1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8"]' || '["1/6","2/6","3/6","4/6","5/6","6/6"]') }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
