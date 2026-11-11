@@ -577,10 +577,10 @@ it("keeps fast feedback separate from complete qualification and release proof",
         ),
       ),
     );
-  expect(ci.on.schedule).toEqual([
-    { cron: "23 0-2,4-23 * * *" },
-    { cron: "23 3 * * *" },
-  ]);
+  // fork 变更：fork 移除了 schedule 调度（fork 的 main 只在同步时推进，
+  // push 触发已覆盖验证；24 次/天调度在 fork 上要么复用空转、要么全量必挂）。
+  // 契约测试继续锁定结构——只是锁定的形态改为"无调度"。同步上游时还原此处与 ci.yml。
+  expect(ci.on.schedule).toEqual([]);
   expect(ci.concurrency.group).toContain("'qualification' || 'feedback'");
   expect(ci.concurrency.group).toContain("inputs.source_sha ||");
   expect(ci.concurrency.group).toContain("github.ref");
