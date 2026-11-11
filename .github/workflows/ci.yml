@@ -5,8 +5,11 @@ on:
     branches: [main]
   pull_request:
     branches: [main, "release/*"]
-  # fork 变更：移除 schedule（每日 24 次调度在全量档失败且烧时长；
-  # fork 的 main 只在同步时推进，push 触发已覆盖验证）。恢复上游时还原这两条 cron。
+  # fork 变更：调度移除（每日 24 次调度在全量档失败且烧时长；
+  # fork 的 main 只在同步时推进，push 触发已覆盖验证）。
+  # 显式空数组：ciRequiredLanes 的 zod schema 要求 schedule 为数组。
+  # 恢复上游时改回下面两条 cron。
+  schedule: []
   # schedule:
   #   - cron: "23 0-2,4-23 * * *"
   #   - cron: "23 3 * * *"
