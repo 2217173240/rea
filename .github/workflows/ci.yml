@@ -5,13 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main, "release/*"]
-  # fork 变更：调度关闭（每日 24 次调度在全量档失败且烧时长；
+  # fork 变更：调度降为每年一次（原 24 次/天在全量档失败且烧时长；
   # fork 的 main 只在同步时推进，push 触发已覆盖验证）。
   # 三方约束的交集解：GitHub 要求 schedule 非空、ciRequiredLanes 的 zod schema
-  # 要求它是数组、fork 要它永不触发——「2 月 31 日」的合法 cron 永不运行。
+  # 要求它是数组、actionlint 拒绝不存在的日期（判为 0 秒间隔）——
+  # 真实日期的年频 cron 全部满足，每年仅一次调度。
   # 恢复上游时改回下面两条 cron。
   schedule:
-    - cron: "0 0 31 2 *"
+    - cron: "0 0 1 1 *"
   # - cron: "23 0-2,4-23 * * *"
   # - cron: "23 3 * * *"
   workflow_dispatch:

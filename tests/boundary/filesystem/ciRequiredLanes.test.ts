@@ -577,11 +577,12 @@ it("keeps fast feedback separate from complete qualification and release proof",
         ),
       ),
     );
-  // fork 变更：fork 关闭了 schedule 调度（fork 的 main 只在同步时推进，
+  // fork 变更：fork 把调度降为每年一次（fork 的 main 只在同步时推进，
   // push 触发已覆盖验证；24 次/天调度在 fork 上要么复用空转、要么全量必挂）。
-  // 「2 月 31 日」cron 永不触发：同时满足 GitHub 非空要求与本 schema 的数组要求。
-  // 契约测试继续锁定结构——锁定的形态改为"永不触发的调度"。同步上游时还原此处与 ci.yml。
-  expect(ci.on.schedule).toEqual([{ cron: "0 0 31 2 *" }]);
+  // 年频真实日期 cron：同时满足 GitHub 非空、本 schema 的数组要求、
+  // 以及 actionlint 的间隔检查（不存在的日期会被判 0 秒间隔而拒绝）。
+  // 契约测试继续锁定结构——锁定的形态改为"年频调度"。同步上游时还原此处与 ci.yml。
+  expect(ci.on.schedule).toEqual([{ cron: "0 0 1 1 *" }]);
   expect(ci.concurrency.group).toContain("'qualification' || 'feedback'");
   expect(ci.concurrency.group).toContain("inputs.source_sha ||");
   expect(ci.concurrency.group).toContain("github.ref");
