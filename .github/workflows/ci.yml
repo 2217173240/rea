@@ -5,9 +5,11 @@ on:
     branches: [main]
   pull_request:
     branches: [main, "release/*"]
-  schedule:
-    - cron: "23 0-2,4-23 * * *"
-    - cron: "23 3 * * *"
+  # fork 变更：移除 schedule（每日 24 次调度在全量档失败且烧时长；
+  # fork 的 main 只在同步时推进，push 触发已覆盖验证）。恢复上游时还原这两条 cron。
+  # schedule:
+  #   - cron: "23 0-2,4-23 * * *"
+  #   - cron: "23 3 * * *"
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -330,11 +332,12 @@ jobs:
       # every shard's diagnostics and coverage. Passing PRs run the full suite.
       fail-fast: ${{ github.event_name == 'pull_request' && needs.changes.outputs.tier == 'fast' }}
       matrix:
-        # Fast feedback uses one source group and eight built groups so the
-        # slowest built shard job stays inside a ten-minute execution budget.
+        # Fast feedback uses one source group and the built groups below so the
+        # slowest built shard job stays inside the execution budget.
         # Classification, build, and report merge sit outside that job.
         # Full qualification retains six complete shards with coverage.
-        shard: ${{ fromJSON(needs.changes.outputs.tier == 'fast' && '["1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8"]' || '["1/6","2/6","3/6","4/6","5/6","6/6"]') }}
+        # fork 变更：fast 档 8 → 10 分片，压最长分片的墙钟时间（ubuntu 并行不缩测试项）。
+        shard: ${{ fromJSON(needs.changes.outputs.tier == 'fast' && '["1/10","2/10","3/10","4/10","5/10","6/10","7/10","8/10","9/10","10/10"]' || '["1/6","2/6","3/6","4/6","5/6","6/6"]') }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
