@@ -339,6 +339,15 @@ const matrix = {
       ]
     : [linux],
 };
+// fork 变更：fork runner 缺上游的 macOS 产物环境，Apple E2E 自 2026-11-07 起
+// 必挂（dispatch CLI stdout 缺失）。在分类层关闭 apple lane——required.mjs 拒绝
+// 「选中 lane 的 skipped」，所以在所有 lane 选择完成之后、输出之前关闭，
+// fast（路径选择）与 full（全选）两条路径都覆盖。
+// 用显式开关（CI_FORK_APPLE_OFF，仅由 ci.yml 的 changes 步骤在 fork 上注入 1）
+// 而不是 GITHUB_REPOSITORY：单测用 ...process.env 跑本脚本，真实 CI 的
+// GITHUB_REPOSITORY 会泄漏进测试进程，把 apple:true 断言打挂。上游不受影响。
+if (process.env.CI_FORK_APPLE_OFF === "1" && "apple" in selected)
+  selected.apple = false;
 const testSelection = planTestSelection(files, event, tier);
 const plan = { ...selected, tier, matrix, files, reasons, testSelection };
 if (process.env.GITHUB_OUTPUT)
