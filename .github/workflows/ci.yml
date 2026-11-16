@@ -139,6 +139,9 @@ jobs:
           HEAD_SHA: ${{ inputs.source_sha || github.event.pull_request.head.sha || github.sha }}
           CI_FULL: ${{ inputs.source_sha != '' || contains(github.event.pull_request.labels.*.name, 'ci:full') }}
           CI_SKIP_FULL: ${{ steps.qualification.outputs.run_full == 'false' }}
+          # fork 变更：fork 上关闭 apple lane（见 scripts/ci/plan.mjs 注释）。
+          # 显式 env 而非让脚本读 GITHUB_REPOSITORY，防泄漏进单测进程。
+          CI_FORK_APPLE_OFF: ${{ github.repository != 'morluto/rea' && '1' || '0' }}
         run: node scripts/ci/plan.mjs
 
   static:
@@ -804,10 +807,9 @@ jobs:
   apple-artifacts:
     name: Real Apple artifact CLI/MCP E2E
     needs: [changes, static, build]
-    # fork 变更：此 E2E 依赖上游专属的 macOS 产物环境（dispatch CLI 在 fork
-    # runner 上 stdout 缺失 → JSON.parse undefined 必挂，2026-11-07 起三连挂）。
-    # fork 上跳过；上游仓库条件不变。契约测试只钉 lane 映射，不钉本 if。
-    if: needs.changes.outputs.apple == 'true' && github.repository == 'morluto/rea'
+    # fork 注：上游原样。fork 在 scripts/ci/plan.mjs 分类层关闭 apple lane
+    # （required.mjs 拒绝选中 lane 的 skipped，故不能在此处 skip）。
+    if: needs.changes.outputs.apple == 'true'
     runs-on: macos-15
     # Passing runs take 10-15 minutes on macOS runners of varying speed, so a
     # 15-minute budget cancelled about a third of runs. Keep a hang bounded.
@@ -1278,6 +1280,8 @@ jobs:
         env:
           CI_JOBS: ${{ toJSON(needs) }}
           CI_QUALIFICATION_DIRECTORY: .cache/ci-qualification
+          # fork 变更：与 plan 步骤同款开关（见 scripts/ci/required.mjs 注释）。
+          CI_FORK_APPLE_OFF: ${{ github.repository != 'morluto/rea' && '1' || '0' }}
         run: node scripts/ci/required.mjs
       - name: Upload full qualification receipt artifact
         if: needs.changes.outputs.tier == 'full' && success()

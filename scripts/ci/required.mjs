@@ -15,6 +15,13 @@ if (invalidFlags.length)
     `CI classification requires explicit true/false scope outputs: ${invalidFlags.join(", ")}`,
   );
 const selectedScopes = CI_FLAGS.filter((flag) => outputs[flag] === "true");
+// fork 变更：fork 在分类层关闭 apple lane（缺上游 macOS 产物环境，E2E 必挂），
+// full 档的「全 canonical scope」不变量在 fork 上把 apple 移出 canonical 集合。
+// 用显式开关（与 plan.mjs 同款，见其注释）避免 GITHUB_REPOSITORY 泄漏进单测。
+const canonicalFlags =
+  process.env.CI_FORK_APPLE_OFF === "1"
+    ? CI_FLAGS.filter((flag) => flag !== "apple")
+    : CI_FLAGS;
 const reused = outputs.tier === "reused";
 if (
   reused &&
@@ -26,7 +33,7 @@ if (
   throw new Error(
     "Reused qualification requires a scheduled admission receipt and no selected lanes",
   );
-if (outputs.tier === "full" && selectedScopes.length !== CI_FLAGS.length)
+if (outputs.tier === "full" && selectedScopes.length !== canonicalFlags.length)
   throw new Error("Full qualification requires every canonical CI scope");
 // Only a fast pull-request plan may run a selected test subset.
 const testMode = outputs.test_mode;
