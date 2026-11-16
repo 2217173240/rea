@@ -762,7 +762,10 @@ jobs:
   apple-artifacts:
     name: Real Apple artifact CLI/MCP E2E
     needs: [changes, static, build]
-    if: needs.changes.outputs.apple == 'true'
+    # fork 变更：此 E2E 依赖上游专属的 macOS 产物环境（dispatch CLI 在 fork
+    # runner 上 stdout 缺失 → JSON.parse undefined 必挂，2026-11-07 起三连挂）。
+    # fork 上跳过；上游仓库条件不变。契约测试只钉 lane 映射，不钉本 if。
+    if: needs.changes.outputs.apple == 'true' && github.repository == 'morluto/rea'
     runs-on: macos-15
     timeout-minutes: 15
     steps:
